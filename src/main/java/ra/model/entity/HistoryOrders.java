@@ -1,8 +1,7 @@
-package ra.repository;
+package ra.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import ra.model.entity.OrderDetail;
 
 @Entity
 @NoArgsConstructor
@@ -15,7 +14,8 @@ public class HistoryOrders {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false)
+    @ManyToOne
+    @JoinColumn(name = "order_detail_id", referencedColumnName = "orderDetailId")
     private OrderDetail orderDetail;
 
 }

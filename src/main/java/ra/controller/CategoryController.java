@@ -30,7 +30,7 @@ public class CategoryController {
         return new ResponseEntity<>(categoryService.findById(id), HttpStatus.OK);
     }
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<String> createCategory(@Valid @RequestBody CategoryRequest categoryRequest) throws CustomerException {
         return new ResponseEntity<>(categoryService.save(categoryRequest),HttpStatus.CREATED);
     }

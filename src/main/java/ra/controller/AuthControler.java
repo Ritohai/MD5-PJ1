@@ -19,7 +19,7 @@ import ra.service.IUserService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api.myservice.com/v1/auth")
+@RequestMapping("/api/v1/auth")
 public class AuthControler {
     @Autowired
     private IUserService userService;

@@ -24,5 +24,6 @@ public class Product {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id")
     private Brand brand;
+    private Boolean statusProduct;
 
 }

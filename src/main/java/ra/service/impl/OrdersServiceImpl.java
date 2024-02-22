@@ -10,10 +10,7 @@ import ra.exception.customer.LoginException;
 import ra.model.dto.request.OrderRequest;
 import ra.model.dto.response.CartResponse;
 import ra.model.dto.response.OrderResponse;
-import ra.model.entity.Cart;
-import ra.model.entity.OrderDetail;
-import ra.model.entity.Orders;
-import ra.model.entity.User;
+import ra.model.entity.*;
 import ra.repository.CartRepository;
 import ra.repository.OrderDetailRepository;
 import ra.repository.OrdersRepository;
@@ -32,18 +29,8 @@ public class OrdersServiceImpl implements IOrdersService {
     @Autowired
     private OrderDetailRepository orderDetailRepository;
 
-    @Override
-    public List<Orders> findAllOrders(Authentication authentication) throws LoginException{
-        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        if (userPrincipal== null){
-            throw  new LoginException("Yêu cầu đăng nhập.");
-        }
-        User user = userPrincipal.getUser();
 
-        return null;
-    }
 
-//    @Transactional(rollbackFor = Exception.class)
     @Override
     public OrderResponse addToOrders(OrderRequest orderRequest, Authentication authentication) throws LoginException, EmptyException {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
@@ -61,7 +48,7 @@ public class OrdersServiceImpl implements IOrdersService {
                 .phone(orderRequest.getPhone())
                 .description(orderRequest.getDescription())
                 .createdDate(new Date())
-                .status(false)
+                .status(StatusOrder.WAITING.toString())
                 .build();
         ordersRepository.save(orders);
         for (Cart c: carts) {
@@ -70,6 +57,7 @@ public class OrdersServiceImpl implements IOrdersService {
                     .product(c.getProduct())
                     .quantity(c.getQuantity())
                     .price(c.getProduct().getPrice())
+                    .statusOrders(StatusOrder.WAITING.toString())
                     .build();
             orderDetailRepository.save(orderDetail);
             cartRepository.delete(c);

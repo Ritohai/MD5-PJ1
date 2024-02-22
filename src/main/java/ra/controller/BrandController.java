@@ -30,7 +30,7 @@ public class BrandController {
         return new ResponseEntity<>(brandService.findById(id), HttpStatus.OK);
     }
 
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<String> createBrand(@Valid @RequestBody BrandRequest brandRequest) throws CustomerException {
         return new ResponseEntity<>(brandService.save(brandRequest),HttpStatus.CREATED);
     }

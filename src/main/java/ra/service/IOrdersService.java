@@ -10,7 +10,6 @@ import ra.model.entity.Orders;
 import java.util.List;
 
 public interface IOrdersService {
-    List<Orders> findAllOrders(Authentication authentication) throws LoginException;
 
     OrderResponse addToOrders(OrderRequest orderRequest, Authentication authentication) throws LoginException, EmptyException;
 }

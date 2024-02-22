@@ -3,6 +3,9 @@ package ra.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -21,5 +24,6 @@ public class OrderDetail {
     private Product product;
     private Double price;
     private Integer quantity;
+    private String statusOrders;
 
 }

@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import ra.exception.customer.CustomerException;
 import ra.exception.customer.LoginException;
+import ra.exception.customer.NotFoundException;
 import ra.model.dto.request.CartRequest;
 import ra.model.dto.response.CartResponse;
 import ra.service.ICartService;
@@ -24,7 +25,7 @@ public class CartController {
     }
 
     @PostMapping
-    public ResponseEntity<CartResponse> addToCart(@RequestBody CartRequest cartRequest,Authentication authentication) throws LoginException {
+    public ResponseEntity<CartResponse> addToCart(@RequestBody CartRequest cartRequest,Authentication authentication) throws LoginException, NotFoundException {
         return new ResponseEntity<>(cartService.addToCart(authentication,cartRequest),HttpStatus.CREATED);
     }
 

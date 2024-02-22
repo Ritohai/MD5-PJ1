@@ -2,6 +2,10 @@ package ra.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,6 +23,7 @@ import ra.service.IProductService;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,8 +48,8 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public String saveProduct(ProductRequest request) throws CustomerException{
-        Category category= categoryRepository.findById(request.getCategory()).get();
+    public String saveProduct(ProductRequest request) throws CustomerException {
+        Category category = categoryRepository.findById(request.getCategory()).get();
         Brand brand = brandRepository.findById(request.getBrand()).get();
         if (category == null) {
             throw new CustomerException("Id not found");
@@ -57,14 +62,15 @@ public class ProductServiceImpl implements IProductService {
                 .stock(request.getStock())
                 .category(category)
                 .brand(brand)
+                .statusProduct(true)
                 .build();
         productRepository.save(product);
         return "Success";
     }
 
     @Override
-    public ProductResponse updateProduct(Long id, ProductRequest productRequest) throws CustomerException{
-        Category category= categoryRepository.findById(productRequest.getCategory()).get();
+    public ProductResponse updateProduct(Long id, ProductRequest productRequest) throws CustomerException {
+        Category category = categoryRepository.findById(productRequest.getCategory()).get();
         Brand brand = brandRepository.findById(productRequest.getBrand()).get();
         Optional<Product> optionalProduct = productRepository.findById(id);
         if (!optionalProduct.isPresent()) {
@@ -78,6 +84,7 @@ public class ProductServiceImpl implements IProductService {
         product.setStock(productRequest.getStock());
         product.setCategory(category);
         product.setBrand(brand);
+        product.setStatusProduct(optionalProduct.get().getStatusProduct());
         productRepository.save(product);
 
         return ProductResponse.builder()
@@ -122,13 +129,40 @@ public class ProductServiceImpl implements IProductService {
 
     @Override
     public String delete(Long id) {
-      productRepository.deleteById(id);
+        productRepository.deleteById(id);
         return "Success";
     }
+
 
     @Override
     public List<Product> getAllProduct() {
 
         return productRepository.findAll();
+    }
+
+    @Override
+    public String changeStatus(Long id) throws CustomerException {
+        if (findById(id) != null) {
+            Product product = productRepository.findById(id).get();
+            product.setStatusProduct(!product.getStatusProduct());
+            if (product.getStatusProduct() == false) {
+                throw new CustomerException("Không thấy id.");
+            }
+        }
+        return "Thay đổi trạng thái thành công.";
+    }
+
+    @Override
+    public List<Product> searchByNameProductOrPrice(String nameProduct, Double startPrice, Double endPrice, Integer page, Integer limit) {
+        Sort sort = Sort.by(Sort.Direction.fromString("DESC"), "nameProduct");
+        Pageable pageable = PageRequest.of(page, limit).withSort(sort);
+        Page<Product> products = productRepository.findByNameProductOrPrice(nameProduct, startPrice, endPrice, pageable);
+        List<Product> list = new ArrayList<>();
+        for (Product p : products.getContent()) {
+            if (p.getStatusProduct()) {
+                list.add(p);
+            }
+        }
+        return list;
     }
 }

@@ -1,6 +1,10 @@
 package ra.service.impl;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -22,10 +26,8 @@ import ra.security.jwt.JwtProvider;
 import ra.security.userPrincipal.UserPrincipal;
 import ra.service.IUserService;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,7 +53,7 @@ public class UserServiceImpl implements IUserService {
             throw new CustomerException("Tài khoản hoặc mật khẩu sai.");
         }
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-        if (!userPrincipal.getUser().getStatus()){
+        if (!userPrincipal.getUser().getStatus()) {
             throw new CustomerException("Tài khoản bị khóa.");
         }
 
@@ -62,8 +64,6 @@ public class UserServiceImpl implements IUserService {
                 .roles(userPrincipal.getAuthorities().stream().map(item -> item.getAuthority()).collect(Collectors.toSet()))
                 .build();
         return jwtResponse;
-
-
     }
 
     @Override
@@ -75,10 +75,11 @@ public class UserServiceImpl implements IUserService {
             throw new CustomerException("Username đã tồn tại.");
         }
         Set<Role> roles = new HashSet<>();
-        userRequestRegister.getRoles().forEach(item -> {
-//            Lặp từng phần tử trong mảng role<String> từ người dùng gửi lên
-            roles.add(roleRepository.findByName(item).orElseThrow(() -> new RuntimeException(item + " not found")));
-        });
+//        userRequestRegister.getRoles().forEach(item -> {
+////            Lặp từng phần tử trong mảng role<String> từ người dùng gửi lên
+//            roles.add(roleRepository.findByName(item).orElseThrow(() -> new RuntimeException(item + " not found")));
+//        });
+        roles.add(roleRepository.findByName("ROLE_USER"));
         User user = User.builder()
                 .email(userRequestRegister.getEmail())
                 .userName(userRequestRegister.getUserName())
@@ -97,14 +98,17 @@ public class UserServiceImpl implements IUserService {
     }
 
     @Override
-    public UserResponse changeStatus(Long id) {
+    public String changeStatus(Long id) throws CustomerException{
         Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser != null) {
+        if (optionalUser.isPresent() && id != 1) {
             User user = optionalUser.get();
             user.setStatus(!user.getStatus());
             userRepository.save(user);
+            return "Thay đổi trạng thái thành công.";
+        } else {
+            throw new CustomerException("Không thấy id.");
         }
-        return null;
+
     }
 
     @Override
@@ -121,8 +125,41 @@ public class UserServiceImpl implements IUserService {
 
     }
 
-    @Override
-    public UserResponse searchUser(String username) {
-        return null;
+
+    //    Tạo TK admin mặc định
+    @PostConstruct
+    public void init() {
+        try {
+            // Tạo tài khoản admin nếu chưa tồn tại
+
+            if (!userRepository.existsByUserName("admin123") && !userRepository.existsByEmail("admin123@gmaill.com")) {
+                Set<Role> adminRoles = new HashSet<>();
+
+                Role role1 = new Role(1L, "ROLE_ADMIN");
+                Role role2 = new Role(2L, "ROLE_USER");
+                roleRepository.save(role1);
+                roleRepository.save(role2);
+                adminRoles.add(roleRepository.findByName("ROLE_ADMIN"));
+                if (userRepository.existsByUserName("admin123") && userRepository.existsByEmail("admin123@gmail.com")) {
+                    throw new CustomerException("Đã tồn tại.");
+                } else {
+                    User adminUser = User.builder()
+                            .email("admin123@gmail.com")
+                            .userName("admin123")
+                            .passWord(passwordEncoder.encode("admin123"))
+                            .status(true)
+                            .roles(adminRoles)
+                            .build();
+
+                    userRepository.save(adminUser);
+                }
+            } else {
+                throw new EmptyException("Đã tồn tại.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
+
 }

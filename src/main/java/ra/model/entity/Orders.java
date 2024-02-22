@@ -24,6 +24,6 @@ public class Orders {
     private String description;
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date createdDate;
-    private Boolean status;
+    private String status;
 
 }

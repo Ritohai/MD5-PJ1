@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import ra.exception.customer.CustomerException;
 import ra.exception.customer.LoginException;
+import ra.exception.customer.NotFoundException;
 import ra.model.dto.request.CartRequest;
 import ra.model.dto.response.CartResponse;
 import ra.model.entity.Cart;
@@ -17,6 +18,7 @@ import ra.security.userPrincipal.UserPrincipal;
 import ra.service.ICartService;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -38,7 +40,7 @@ public class CartServiceImpl implements ICartService {
     }
 
     @Override
-    public CartResponse addToCart(Authentication authentication, CartRequest cartRequest) throws LoginException {
+    public CartResponse addToCart(Authentication authentication, CartRequest cartRequest) throws LoginException, NotFoundException {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         if (userPrincipal== null){
             throw  new LoginException("Yêu cầu đăng nhập.");
@@ -46,7 +48,7 @@ public class CartServiceImpl implements ICartService {
         User user = userPrincipal.getUser();
         Product product = productRepository.findById(cartRequest.getProductId()).get();
         if (product==null){
-            throw new LoginException("Product not found");}
+            throw new NoSuchElementException("Product not found");}
         List<Cart> carts = cartRepository.findAllByUser(user);
         Cart cart = Cart.builder()
                 .product(product)
@@ -64,7 +66,13 @@ public class CartServiceImpl implements ICartService {
         for (Cart c: carts) {
             if (c.getProduct().getProductId().equals(cartRequest.getProductId())){
                 c.setQuantity(c.getQuantity() + cartRequest.getQuantity());
-                cartRepository.save(c);
+                if (c.getQuantity() > 0) {
+                    System.out.println(c.getQuantity()+ "l");
+                    cartRepository.save(c);
+                } else {
+                    System.out.println(c.getQuantity());
+                    cartRepository.delete(c);
+                }
                 return CartResponse.builder()
                         .cartId(c.getCartId())
                         .product(c.getProduct())
@@ -72,6 +80,7 @@ public class CartServiceImpl implements ICartService {
                         .build();
             }
         }
+
         cartRepository.save(cart);
 
         return CartResponse.builder()
@@ -113,6 +122,8 @@ public class CartServiceImpl implements ICartService {
             Optional<Cart> cartNew = cartRepository.findById(id);
             if (cartNew.isPresent()) {
                 cartRepository.deleteById(id);
+            } else {
+                throw new CustomerException("Id not found");
             }
         }
         return "Delete done";
